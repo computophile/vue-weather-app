@@ -1,28 +1,29 @@
 <template>
-     <div id="app">
+     <div id="app" :class = "typeof (weather.main) != 'undefined' && weather.main.temp < 16 ? 'cold' : 'warm'" >
           <main>
                <div class="search-box">
                     <input
                          type="text"
                          name="search"
                          class="search-bar"
-                         placeholder="Search"
+                         placeholder="Seach the name of a city to know the weather"
                          v-model="query"
                          @keypress="fetchweather"
                     />
                </div>
 
-               <div class="weather-wrap">
+               <div class="weather-wrap" v-if="typeof(weather.main) != 'undefined'">
                     <div class="location-box">
-                         <div class="location">Northampton, UK</div>
-                         <div class="date">Monday 20 January, 2020</div>
+                         <div class="location">{{weather.name}}, {{weather.sys.country}}</div>
+                         <div class="date">{{dateBuilder()}}</div>
                     </div>
                     <div class="weather-box">
-                        <div class="temp">9&#176;C </div>
-                        <div class="weather">Rain</div>
+                        <div class="temp">{{Math.round(weather.main.temp)}}&#176;C</div>
+                        <div class="weather">{{weather.weather[0].main}}</div>
 
                     </div>
                </div>
+               <div class="not-found" v-else-if="weather.cod == 404">City Not Found!</div>
           </main>
      </div>
 </template>
@@ -41,11 +42,29 @@ export default {
      methods:{
        fetchweather (e){
          if(e.key == "Enter"){
-           fetch(`${this.api_base}weather?q=${this.query}&appid=${this.api_key}`).
+           fetch(`${this.url_base}weather?q=${this.query}&units=metric&appid=${this.api_key}`).
            then(response=>{
              return response.json();
            }).then(this.setResults);
          }
+       },
+       setResults(results){
+         this.weather = results;
+         console.log(results)
+       },
+       dateBuilder(){
+         let date = new Date();
+         let months =["January", "February", "March", "April", "May", "June", "July", "August", "September", "November", "December"]
+         let days= [
+           "Sunday",
+           "Monday",
+           "Tuesday",
+           "Wednesday",
+           "Thursday",
+           "Friday",
+           "Saturday"
+         ]
+         return `${days[date.getDay()]}, ${date.getDate()} ${months[date.getMonth()]},  ${date.getFullYear()}`
        }
      } 
 };
@@ -68,10 +87,17 @@ body {
 }
 
 #app {
-     background-image: url("https://cdn.hipwallpaper.com/i/51/20/Al0PqL.jpg");
+  background-image: url("https://wallpaper.dog/large/5532051.jpg");
      background-size: cover;
      background-position: bottom;
      transition: 0.5s;
+}
+#app.warm{
+  background-image: url("https://cdn.hipwallpaper.com/i/51/20/Al0PqL.jpg");
+}
+
+#app.cold{
+  background-image: url('https://c4.wallpaperflare.com/wallpaper/799/452/950/night-snow-mountains-wallpaper-preview.jpg');
 }
 
 main {
@@ -148,5 +174,10 @@ main {
 }
 .weather-box .weather{
   font-size: 2.2rem;
+}
+.not-found{
+  color: white;
+  font-size: 2.4rem;
+  margin-top: 2rem;
 }
 </style>
